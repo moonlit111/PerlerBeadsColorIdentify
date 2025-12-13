@@ -106,11 +106,11 @@
 navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const tool = btn.dataset.tool;
-        
+
         // 更新导航按钮状态
         navButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         // 更新工具区域显示
         toolSections.forEach(section => {
             section.classList.remove('active');
@@ -270,8 +270,9 @@ function drawImage() {
     // 绘制图片到canvas（使用原始图片尺寸绘制到缩放后的canvas）
     ctx.drawImage(currentImage, 0, 0, displayWidth, displayHeight);
 
-    // 更新预览框
-    if (imagePreview && imagePreview.style.display !== 'none') {
+    // 更新预览框（仅在非移动端或预览框可见时）
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile && imagePreview && imagePreview.style.display !== 'none') {
         updateDragPreview();
     }
 
@@ -441,7 +442,6 @@ imageWrapper.addEventListener('mouseleave', () => {
 function pickColorAtPosition(clientX, clientY) {
     if (!currentImage) return;
 
-    const imageWrapper = document.getElementById('image-wrapper');
     const rect = imageCanvas.getBoundingClientRect();
 
     // 计算相对于canvas的坐标
@@ -467,35 +467,32 @@ function pickColorAtPosition(clientX, clientY) {
     const g = imageData.data[1];
     const b = imageData.data[2];
     
-    // 显示颜色预览（桌面端显示+号，移动端隐藏）
+    // 显示颜色预览十字标记（所有设备都显示，点击后停留）
     const color = `rgb(${r}, ${g}, ${b})`;
     const isMobile = window.innerWidth <= 768;
 
+    // 设置透明背景（虽然最终会显示为透明，但保持代码完整性）
+    colorPreview.style.backgroundColor = 'transparent';
+
+    // 计算相对于 image-wrapper 的坐标
+    const wrapperRect = imageWrapper.getBoundingClientRect();
+
+    // 计算点击点相对于 image-wrapper 的坐标
+    // getBoundingClientRect() 已经考虑了滚动，直接相减即可
+    const relativeX = clientX - wrapperRect.left;
+    const relativeY = clientY - wrapperRect.top;
+
+    colorPreview.style.left = relativeX + 'px';
+    colorPreview.style.top = relativeY + 'px';
+    colorPreview.style.display = 'flex';
+
+    // 桌面端短暂显示后隐藏，移动端持续显示
     if (!isMobile) {
-        // 设置透明背景（虽然最终会显示为透明，但保持代码完整性）
-        colorPreview.style.backgroundColor = 'transparent';
-
-        // 计算相对于 image-wrapper 的坐标
-        const imageWrapper = document.getElementById('image-wrapper');
-        const wrapperRect = imageWrapper.getBoundingClientRect();
-
-        // 计算点击点相对于 image-wrapper 的坐标
-        // getBoundingClientRect() 已经考虑了滚动，直接相减即可
-        const relativeX = clientX - wrapperRect.left;
-        const relativeY = clientY - wrapperRect.top;
-
-        colorPreview.style.left = relativeX + 'px';
-        colorPreview.style.top = relativeY + 'px';
-        colorPreview.style.display = 'flex';
-
-        // 短暂显示后隐藏
         setTimeout(() => {
             colorPreview.style.display = 'none';
         }, 1);
-    } else {
-        // 移动端隐藏光标
-        colorPreview.style.display = 'none';
     }
+    // 移动端不自动隐藏，保持显示直到下次点击
     
     // 显示选中的颜色信息
     selectedColorBox.style.backgroundColor = color;
@@ -877,12 +874,7 @@ function showColorDetail(color) {
                 modalContent.style.transform = 'translateX(-50%)';
                 modalContent.style.margin = '0';
                 
-                // 滚动到模态框位置
-                const scrollTo = finalTop - (viewportHeight / 2) + (modalHeight / 2);
-                window.scrollTo({
-                    top: Math.max(0, scrollTo),
-                    behavior: 'smooth'
-                });
+                // 直接设置模态框位置，不要滑动效果
             }
         }, 50);
     } else {
@@ -923,9 +915,9 @@ document.addEventListener('keydown', (e) => {
 // 初始化色卡
 renderColorChart();
 
-// 深色模式切换
+// 深色模式切换（默认开启）
 const themeToggle = document.getElementById('theme-toggle');
-let isDarkMode = localStorage.getItem('darkMode') === 'true';
+let isDarkMode = localStorage.getItem('darkMode') !== 'false'; // 默认true，除非明确设置为false
 
 function applyTheme() {
     if (isDarkMode) {
