@@ -399,21 +399,33 @@ function pickColorAtPosition(clientX, clientY) {
     const rect = imageCanvas.getBoundingClientRect();
     
     // 计算相对于canvas的坐标
-    // getBoundingClientRect() 已经考虑了滚动，所以直接使用即可
+    // getBoundingClientRect() 已经考虑了页面滚动，所以直接使用
     const canvasX = clientX - rect.left;
     const canvasY = clientY - rect.top;
     
-    // 计算实际canvas像素坐标
-    // 需要考虑canvas的实际尺寸和显示尺寸的比例
-    const scaleX = imageCanvas.width / rect.width;
-    const scaleY = imageCanvas.height / rect.height;
+    // 获取canvas的实际像素尺寸（已经在drawImage中设置）
+    const pixelWidth = imageCanvas.width;
+    const pixelHeight = imageCanvas.height;
     
-    const x = Math.floor(canvasX * scaleX);
-    const y = Math.floor(canvasY * scaleY);
+    // 获取canvas的实际显示尺寸
+    // 由于 imageCanvas.style.width/height 被设置为 pixelWidth/Height
+    // 理论上 rect.width/height 应该等于 pixelWidth/Height
+    // 但可能存在浏览器舍入误差，所以计算比例以确保准确性
+    const displayWidth = rect.width || pixelWidth;
+    const displayHeight = rect.height || pixelHeight;
+    
+    // 计算缩放比例（处理舍入误差）
+    const scaleX = pixelWidth / displayWidth;
+    const scaleY = pixelHeight / displayHeight;
+    
+    // 计算实际canvas像素坐标
+    // 使用精确的计算，避免累积误差
+    const x = Math.round(canvasX * scaleX);
+    const y = Math.round(canvasY * scaleY);
     
     // 确保坐标在画布范围内
-    const clampedX = Math.max(0, Math.min(x, imageCanvas.width - 1));
-    const clampedY = Math.max(0, Math.min(y, imageCanvas.height - 1));
+    const clampedX = Math.max(0, Math.min(x, pixelWidth - 1));
+    const clampedY = Math.max(0, Math.min(y, pixelHeight - 1));
     
     // 获取像素颜色
     const imageData = ctx.getImageData(clampedX, clampedY, 1, 1);
