@@ -395,34 +395,40 @@ imageWrapper.addEventListener('mouseleave', () => {
 // 统一的颜色拾取函数
 function pickColorAtPosition(clientX, clientY) {
     if (!currentImage) return;
-    
+
+    const imageWrapper = document.getElementById('image-wrapper');
     const rect = imageCanvas.getBoundingClientRect();
-    
+
     // 计算相对于canvas的坐标
-    // getBoundingClientRect() 已经考虑了页面滚动，所以直接使用
-    const canvasX = clientX - rect.left;
-    const canvasY = clientY - rect.top;
-    
+    // getBoundingClientRect() 已经考虑了页面滚动，但还需要考虑容器的滚动偏移
+    const wrapperScrollLeft = imageWrapper.scrollLeft;
+    const wrapperScrollTop = imageWrapper.scrollTop;
+
+    // 计算点击点相对于canvas左上角的坐标
+    // 减去容器的滚动偏移，确保坐标正确
+    const canvasX = clientX - rect.left + wrapperScrollLeft;
+    const canvasY = clientY - rect.top + wrapperScrollTop;
+
     // 获取canvas的实际像素尺寸（已经在drawImage中设置）
     const pixelWidth = imageCanvas.width;
     const pixelHeight = imageCanvas.height;
-    
+
     // 获取canvas的实际显示尺寸
     // 由于 imageCanvas.style.width/height 被设置为 pixelWidth/Height
     // 理论上 rect.width/height 应该等于 pixelWidth/Height
     // 但可能存在浏览器舍入误差，所以计算比例以确保准确性
     const displayWidth = rect.width || pixelWidth;
     const displayHeight = rect.height || pixelHeight;
-    
+
     // 计算缩放比例（处理舍入误差）
     const scaleX = pixelWidth / displayWidth;
     const scaleY = pixelHeight / displayHeight;
-    
+
     // 计算实际canvas像素坐标
     // 使用精确的计算，避免累积误差
     const x = Math.round(canvasX * scaleX);
     const y = Math.round(canvasY * scaleY);
-    
+
     // 确保坐标在画布范围内
     const clampedX = Math.max(0, Math.min(x, pixelWidth - 1));
     const clampedY = Math.max(0, Math.min(y, pixelHeight - 1));
@@ -501,26 +507,27 @@ imageCanvas.addEventListener('touchmove', (e) => {
 
 imageCanvas.addEventListener('touchend', (e) => {
     if (!currentImage) return;
-    
+
     // 如果是双指触摸结束，不处理
     if (e.touches.length > 0) return;
-    
+
     // 如果发生了拖动，不触发颜色识别
     if (touchHasMoved) {
         touchHasMoved = false;
         return;
     }
-    
-    // 使用最后记录的触摸位置
+
+    // 使用触摸结束时的准确坐标
     const touch = e.changedTouches[0];
     const touchDuration = Date.now() - touchStartTime;
-    
+
     // 只有快速点击（小于300ms）才触发颜色识别
     if (touchDuration < 300) {
         e.preventDefault();
+        // 使用 touch.clientX/clientY，这是触摸结束时的准确位置
         pickColorAtPosition(touch.clientX, touch.clientY);
     }
-    
+
     touchHasMoved = false;
 }, { passive: false });
 
