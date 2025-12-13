@@ -184,7 +184,6 @@ const zoomOutBtn = document.getElementById('zoom-out-btn');
 const zoomValue = document.getElementById('zoom-value');
 const imageCanvas = document.getElementById('image-canvas');
 const ctx = imageCanvas.getContext('2d');
-const colorPreview = document.getElementById('color-preview');
 const selectedColorInfo = document.getElementById('selected-color-info');
 const selectedColorBox = document.getElementById('selected-color-box');
 const selectedHex = document.getElementById('selected-hex');
@@ -236,6 +235,11 @@ function loadImageFromFile(file) {
             // 重置颜色选择信息（新图片上传时）
             selectedColorInfo.style.display = 'none';
             matchedColors.style.display = 'none';
+            // 上传图片后隐藏使用教程
+            const usageTutorial = document.getElementById('usage-tutorial');
+            if (usageTutorial) {
+                usageTutorial.style.display = 'none';
+            }
 
             // 上传图片后关闭呼吸缩放效果
             document.body.classList.add('image-uploaded');
@@ -542,11 +546,8 @@ function pickColorAtPosition(clientX, clientY) {
     const g = imageData.data[1];
     const b = imageData.data[2];
     
-    // 不显示颜色预览圆圈
+    // 获取颜色值
     const color = `rgb(${r}, ${g}, ${b})`;
-    
-    // 确保颜色预览圆圈始终隐藏
-    colorPreview.style.display = 'none';
     
     // 显示选中的颜色信息
     selectedColorBox.style.backgroundColor = color;
@@ -560,8 +561,14 @@ function pickColorAtPosition(clientX, clientY) {
     
     // 显示匹配结果
     renderMatchedColorsList(closestColors, matchedColorsList);
-    
+
     matchedColors.style.display = 'block';
+
+    // 识别颜色后隐藏使用教程
+    const usageTutorial = document.getElementById('usage-tutorial');
+    if (usageTutorial) {
+        usageTutorial.style.display = 'none';
+    }
 }
 
 // 图片点击事件已在 mouseup 中处理，这里移除以避免冲突
