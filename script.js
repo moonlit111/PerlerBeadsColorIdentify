@@ -439,21 +439,34 @@ function pickColorAtPosition(clientX, clientY) {
     const g = imageData.data[1];
     const b = imageData.data[2];
     
-    // 显示颜色预览（保留+号）
+    // 显示颜色预览（桌面端显示+号，移动端隐藏）
     const color = `rgb(${r}, ${g}, ${b})`;
-    colorPreview.style.backgroundColor = color;
+    const isMobile = window.innerWidth <= 768;
 
-    // 计算相对于 image-wrapper 的坐标（考虑容器滚动）
-    const imageWrapper = document.getElementById('image-wrapper');
-    const wrapperRect = imageWrapper.getBoundingClientRect();
+    if (!isMobile) {
+        // 设置透明背景（虽然最终会显示为透明，但保持代码完整性）
+        colorPreview.style.backgroundColor = 'transparent';
 
-    // 计算点击点相对于 image-wrapper 的坐标
-    const relativeX = clientX - wrapperRect.left;
-    const relativeY = clientY - wrapperRect.top;
+        // 计算相对于 image-wrapper 的坐标（考虑容器滚动）
+        const imageWrapper = document.getElementById('image-wrapper');
+        const wrapperRect = imageWrapper.getBoundingClientRect();
 
-    colorPreview.style.left = relativeX + 'px';
-    colorPreview.style.top = relativeY + 'px';
-    colorPreview.style.display = 'flex';
+        // 计算点击点相对于 image-wrapper 的坐标
+        const relativeX = clientX - wrapperRect.left;
+        const relativeY = clientY - wrapperRect.top;
+
+        colorPreview.style.left = relativeX + 'px';
+        colorPreview.style.top = relativeY + 'px';
+        colorPreview.style.display = 'flex';
+
+        // 短暂显示后隐藏
+        setTimeout(() => {
+            colorPreview.style.display = 'none';
+        }, 1);
+    } else {
+        // 移动端隐藏光标
+        colorPreview.style.display = 'none';
+    }
     
     // 显示选中的颜色信息
     selectedColorBox.style.backgroundColor = color;
