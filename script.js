@@ -398,7 +398,8 @@ function pickColorAtPosition(clientX, clientY) {
     
     const rect = imageCanvas.getBoundingClientRect();
     
-    // 计算相对于canvas的坐标（考虑滚动和缩放）
+    // 计算相对于canvas的坐标
+    // getBoundingClientRect() 已经考虑了滚动，所以直接使用即可
     const canvasX = clientX - rect.left;
     const canvasY = clientY - rect.top;
     

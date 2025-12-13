@@ -496,14 +496,14 @@ body.dark-mode .matched-color-item.best-match {
 }
 
 .matched-color-id {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     color: #333;
     margin-bottom: 2px;
 }
 
 .matched-color-values {
-    font-size: 10px;
+    font-size: 12px;
     color: #666;
     margin-bottom: 2px;
 }
@@ -649,13 +649,13 @@ body.dark-mode .matched-color-item.best-match {
 }
 
 .color-card-id {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: #333;
 }
 
 .color-card-name {
-    font-size: 10px;
+    font-size: 11px;
     color: #999;
     margin-top: 2px;
 }
@@ -1359,11 +1359,11 @@ body.dark-mode .theme-toggle {
     }
     
     .color-card-id {
-        font-size: 12px;
+        font-size: 14px;
     }
     
     .color-card-name {
-        font-size: 9px;
+        font-size: 10px;
     }
     
     .group-filter {
@@ -1439,11 +1439,11 @@ body.dark-mode .theme-toggle {
     }
     
     .color-card-id {
-        font-size: 11px;
+        font-size: 13px;
     }
     
     .color-card-name {
-        font-size: 8px;
+        font-size: 9px;
     }
     
     .btn {
