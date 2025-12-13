@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼豆辅助工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <button id="theme-toggle" class="theme-toggle">🌙</button>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>拼豆辅助工具</h1>
+            <div class="header-controls">
+                <div class="color-system-selector">
+                    <label for="color-system-select">色号系统：</label>
+                    <select id="color-system-select">
+                        <option value="MARD">MARD</option>
+                        <option value="COCO">COCO</option>
+                        <option value="漫漫">漫漫</option>
+                        <option value="盼盼">盼盼</option>
+                        <option value="咪小窝">咪小窝</option>
+                    </select>
+                </div>
+                <button id="color-manager-btn" class="btn btn-primary">🎨 管理我的颜色</button>
+            </div>
+            <nav class="tool-nav">
+                <button class="nav-btn active" data-tool="color-picker">颜色识别</button>
+                <button class="nav-btn" data-tool="color-chart">色卡</button>
+            </nav>
+        </header>
+
+        <!-- 颜色识别工具 -->
+        <div id="color-picker-tool" class="tool-section active">
+            <div class="tool-header">
+                <h2>颜色识别工具</h2>
+                <p>上传图片，点击图片上的任意位置即可识别颜色</p>
+            </div>
+            
+            <div class="color-picker-container">
+                <div class="image-section">
+                    <div class="image-controls">
+                        <label for="image-upload" class="btn btn-primary">📷 上传图片</label>
+                        <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                        <button id="zoom-in-btn" class="btn btn-secondary">🔍+ 放大</button>
+                        <button id="zoom-out-btn" class="btn btn-secondary">🔍- 缩小</button>
+                        <span class="zoom-level">缩放: <span id="zoom-value">100%</span> (滚轮缩放)</span>
+                    </div>
+                    <div class="image-wrapper" id="image-wrapper">
+                        <div id="upload-area" class="upload-area">
+                            <div class="upload-content">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">点击或拖拽图片到此处上传</div>
+                                <div class="upload-hint">或使用 Ctrl+V (Cmd+V) 粘贴图片</div>
+                            </div>
+                        </div>
+                        <canvas id="image-canvas" style="display: none;"></canvas>
+                        <div id="color-preview" class="color-preview" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <div class="results-section">
+                    <div id="selected-color-info" class="selected-color-info" style="display: none;">
+                        <h3>选中的颜色</h3>
+                        <div class="color-display">
+                            <div class="color-box" id="selected-color-box"></div>
+                            <div class="color-details">
+                                <div>HEX: <span id="selected-hex"></span></div>
+                                <div>RGB: <span id="selected-rgb"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="matched-colors" class="matched-colors" style="display: none;">
+                        <h3>匹配的拼豆颜色</h3>
+                        <div id="matched-colors-list" class="matched-colors-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 色卡工具 -->
+        <div id="color-chart-tool" class="tool-section">
+            <div class="tool-header">
+                <h2>Mard221 色卡</h2>
+                <p>点击任意颜色查看详细信息及10个替代颜色</p>
+            </div>
+            
+            <div class="color-chart-container">
+                <div class="group-filter">
+                    <button class="filter-btn active" data-group="all">全部</button>
+                    <button class="filter-btn" data-group="A">A组</button>
+                    <button class="filter-btn" data-group="B">B组</button>
+                    <button class="filter-btn" data-group="C">C组</button>
+                    <button class="filter-btn" data-group="D">D组</button>
+                    <button class="filter-btn" data-group="E">E组</button>
+                    <button class="filter-btn" data-group="F">F组</button>
+                    <button class="filter-btn" data-group="G">G组</button>
+                    <button class="filter-btn" data-group="H">H组</button>
+                    <button class="filter-btn" data-group="M">M组</button>
+                </div>
+                
+                <div id="color-chart-grid" class="color-chart-grid"></div>
+                
+                <!-- 颜色详情模态框 -->
+                <div id="color-detail-modal" class="modal-overlay" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="detail-color-id"></h3>
+                            <button id="close-detail-btn" class="close-btn">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="detail-color-display">
+                                <div class="detail-color-box" id="detail-color-box"></div>
+                                <div class="detail-color-info">
+                                    <div class="detail-info-item">
+                                        <strong>HEX:</strong> <span id="detail-hex"></span>
+                                    </div>
+                                    <div class="detail-info-item">
+                                        <strong>RGB:</strong> <span id="detail-rgb"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alternative-colors-section">
+                                <h4>10个替代颜色</h4>
+                                <div id="alternative-colors-list" class="alternative-colors-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 颜色管理模态框 -->
+    <div id="color-manager-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content color-manager-modal">
+            <div class="modal-header">
+                <h3>管理我的颜色</h3>
+                <button id="close-color-manager-btn" class="close-btn">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="color-manager-controls">
+                    <div class="control-group">
+                        <button id="select-all-btn" class="btn btn-secondary">全选</button>
+                        <button id="deselect-all-btn" class="btn btn-secondary">全不选</button>
+                        <button id="save-btn" class="btn btn-primary">💾 保存</button>
+                    </div>
+                    <div class="control-group">
+                        <button id="export-btn" class="btn btn-secondary">📤 导出配置</button>
+                        <label for="import-file" class="btn btn-secondary" style="cursor: pointer; margin: 0;">
+                            📥 导入配置
+                            <input type="file" id="import-file" accept=".json" style="display: none;">
+                        </label>
+                    </div>
+                    <div class="selected-count">
+                        已选择: <span id="selected-count">0</span> / <span id="total-count">0</span>
+                    </div>
+                </div>
+                <div id="color-manager-grid" class="color-manager-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="colors.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+
