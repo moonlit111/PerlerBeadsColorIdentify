@@ -2,6 +2,48 @@
 (function() {
     'use strict';
     
+    // ========== 性能优化工具函数 ==========
+    // 防抖函数
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // 节流函数
+    function throttle(func, limit) {
+        let inThrottle;
+        return function(...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    }
+    
+    // 使用requestAnimationFrame的节流
+    function rafThrottle(func) {
+        let rafId = null;
+        return function(...args) {
+            if (rafId === null) {
+                rafId = requestAnimationFrame(() => {
+                    func.apply(this, args);
+                    rafId = null;
+                });
+            }
+        };
+    }
+    
+    // 检测是否为移动设备
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    
     // 等待colors.js加载
     function init() {
         if (typeof window.mard221Colors === 'undefined') {
@@ -59,9 +101,11 @@
         });
     }
 
-    // 显示匹配颜色列表
+    // 显示匹配颜色列表 - 使用DocumentFragment优化性能
     function renderMatchedColorsList(closestColors, container) {
-        container.innerHTML = '';
+        // 使用DocumentFragment减少DOM操作
+        const fragment = document.createDocumentFragment();
+        
         closestColors.forEach((colorData, index) => {
             const item = document.createElement('div');
             item.className = 'matched-color-item' + (index === 0 ? ' best-match' : '');
@@ -79,10 +123,16 @@
             
             const values = document.createElement('div');
             values.className = 'matched-color-values';
-            values.innerHTML = `
-                HEX: <span>${colorData.hex}</span><br>
-                RGB: <span>(${colorData.rgb.r}, ${colorData.rgb.g}, ${colorData.rgb.b})</span>
-            `;
+            // 使用textContent和innerHTML的组合来避免XSS风险和提高性能
+            const hexSpan = document.createElement('span');
+            hexSpan.textContent = colorData.hex;
+            const rgbSpan = document.createElement('span');
+            rgbSpan.textContent = `(${colorData.rgb.r}, ${colorData.rgb.g}, ${colorData.rgb.b})`;
+            values.appendChild(document.createTextNode('HEX: '));
+            values.appendChild(hexSpan);
+            values.appendChild(document.createElement('br'));
+            values.appendChild(document.createTextNode('RGB: '));
+            values.appendChild(rgbSpan);
             
             const similarity = document.createElement('div');
             similarity.className = 'similarity-badge';
@@ -95,8 +145,12 @@
             item.appendChild(colorBox);
             item.appendChild(info);
             
-            container.appendChild(item);
+            fragment.appendChild(item);
         });
+        
+        // 一次性更新DOM
+        container.innerHTML = '';
+        container.appendChild(fragment);
     }
 
     // ========== 工具切换 ==========
@@ -245,36 +299,45 @@ document.addEventListener('paste', (e) => {
     }
 });
 
-// 绘制图片
+// 绘制图片 - 使用requestAnimationFrame优化
+let drawImageRafId = null;
 function drawImage() {
     if (!currentImage) return;
     
-    // 计算实际显示尺寸
-    const baseWidth = currentImage.width * imageScale;
-    const baseHeight = currentImage.height * imageScale;
-    const displayWidth = baseWidth * currentZoom;
-    const displayHeight = baseHeight * currentZoom;
-    
-    // 设置canvas的实际像素尺寸（不受CSS影响）
-    imageCanvas.width = displayWidth;
-    imageCanvas.height = displayHeight;
-    
-    // 设置canvas的显示尺寸（CSS样式）- 固定尺寸，不随缩放改变容器
-    imageCanvas.style.width = displayWidth + 'px';
-    imageCanvas.style.height = displayHeight + 'px';
-    imageCanvas.style.maxWidth = 'none';
-    imageCanvas.style.maxHeight = 'none';
-    imageCanvas.style.minWidth = '0';
-    imageCanvas.style.minHeight = '0';
-    
-    // 绘制图片到canvas（使用原始图片尺寸绘制到缩放后的canvas）
-    ctx.drawImage(currentImage, 0, 0, displayWidth, displayHeight);
-
-    // 更新预览框（仅在非移动端或预览框可见时）
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile && imagePreview && imagePreview.style.display !== 'none') {
-        updateDragPreview();
+    // 取消之前的raf请求
+    if (drawImageRafId !== null) {
+        cancelAnimationFrame(drawImageRafId);
     }
+    
+    drawImageRafId = requestAnimationFrame(() => {
+        // 计算实际显示尺寸
+        const baseWidth = currentImage.width * imageScale;
+        const baseHeight = currentImage.height * imageScale;
+        const displayWidth = baseWidth * currentZoom;
+        const displayHeight = baseHeight * currentZoom;
+        
+        // 设置canvas的实际像素尺寸（不受CSS影响）
+        imageCanvas.width = displayWidth;
+        imageCanvas.height = displayHeight;
+        
+        // 设置canvas的显示尺寸（CSS样式）- 固定尺寸，不随缩放改变容器
+        imageCanvas.style.width = displayWidth + 'px';
+        imageCanvas.style.height = displayHeight + 'px';
+        imageCanvas.style.maxWidth = 'none';
+        imageCanvas.style.maxHeight = 'none';
+        imageCanvas.style.minWidth = '0';
+        imageCanvas.style.minHeight = '0';
+        
+        // 绘制图片到canvas（使用原始图片尺寸绘制到缩放后的canvas）
+        ctx.drawImage(currentImage, 0, 0, displayWidth, displayHeight);
+
+        // 更新预览框（仅在非移动端或预览框可见时）
+        if (!isMobile && imagePreview && imagePreview.style.display !== 'none') {
+            updateDragPreview();
+        }
+
+        drawImageRafId = null;
+    });
 
     // 注意：不在这里重置颜色选择信息，保持匹配结果可见
     // 只有在重新上传图片时才需要重置
@@ -302,19 +365,26 @@ function updateZoom() {
     }
 }
 
-// 鼠标滚轮缩放（提高上限到10倍）
-imageWrapper.addEventListener('wheel', (e) => {
+// 鼠标滚轮缩放（提高上限到10倍）- 使用节流优化
+const handleWheelZoom = throttle((e) => {
     if (!currentImage) return;
     
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     currentZoom = Math.max(0.2, Math.min(10, currentZoom * delta));
     updateZoom();
-}, { passive: false });
+}, 50); // 50ms节流
 
-// 双指捏合缩放
+imageWrapper.addEventListener('wheel', handleWheelZoom, { passive: false });
+
+// 双指捏合缩放 - 使用rafThrottle优化
 let initialDistance = 0;
 let initialZoom = 1;
+
+const handleTouchMoveZoom = rafThrottle(() => {
+    if (!currentImage || initialDistance === 0) return;
+    updateZoom();
+});
 
 imageWrapper.addEventListener('touchstart', (e) => {
     if (!currentImage || e.touches.length !== 2) return;
@@ -342,7 +412,7 @@ imageWrapper.addEventListener('touchmove', (e) => {
     if (initialDistance > 0) {
         const scale = currentDistance / initialDistance;
         currentZoom = Math.max(0.2, Math.min(10, initialZoom * scale));
-        updateZoom();
+        handleTouchMoveZoom();
     }
 }, { passive: false });
 
@@ -374,8 +444,8 @@ imageWrapper.addEventListener('mousedown', (e) => {
     }
 });
 
-// 鼠标移动事件 - 拖动中
-imageWrapper.addEventListener('mousemove', (e) => {
+// 鼠标移动事件 - 拖动中 - 使用rafThrottle优化
+const handleDragMove = rafThrottle((e) => {
     if (!isDragging || !currentImage) return;
     
     const deltaX = dragStartX - e.clientX;
@@ -388,8 +458,8 @@ imageWrapper.addEventListener('mousemove', (e) => {
         imageWrapper.scrollLeft = scrollStartX + deltaX;
         imageWrapper.scrollTop = scrollStartY + deltaY;
 
-        // 显示预览框并更新内容
-        if (imagePreview) {
+        // 移动端不显示预览框以提高性能
+        if (!isMobile && imagePreview) {
             imagePreview.style.display = 'block';
             imagePreview.classList.add('show');
             updateDragPreview();
@@ -398,6 +468,11 @@ imageWrapper.addEventListener('mousemove', (e) => {
         e.preventDefault();
         e.stopPropagation();
     }
+});
+
+imageWrapper.addEventListener('mousemove', (e) => {
+    if (!isDragging || !currentImage) return;
+    handleDragMove(e);
 });
 
 // 鼠标释放事件 - 结束拖动
@@ -1414,9 +1489,11 @@ colorSystemSelect.addEventListener('change', (e) => {
         });
     }
 
-    // 更新拖动预览框 - 显示完整图片和可见区域框
-    function updateDragPreview() {
+    // 更新拖动预览框 - 显示完整图片和可见区域框 - 使用节流优化
+    const updateDragPreview = throttle(function() {
         if (!currentImage || !imagePreview || imagePreview.style.display === 'none') return;
+        // 移动端不更新预览框以提高性能
+        if (isMobile) return;
 
         const wrapper = imageWrapper;
         const wrapperRect = wrapper.getBoundingClientRect();
@@ -1450,7 +1527,7 @@ colorSystemSelect.addEventListener('change', (e) => {
         // 填充半透明背景表示可见区域
         previewCtx.fillStyle = 'rgba(0, 122, 255, 0.1)';
         previewCtx.fillRect(visibleRectX, visibleRectY, visibleRectWidth, visibleRectHeight);
-    }
+    }, 100); // 100ms节流
 
     console.log('初始化完成！');
     } // 结束 init 函数

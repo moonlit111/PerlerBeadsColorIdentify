@@ -1734,48 +1734,50 @@ body.dark-mode .close-btn:hover {
 
 /* 移动端性能优化 - 禁用复杂动画 */
 @media (max-width: 768px) {
+    /* 禁用body所有动画和复杂背景 */
     body {
         animation: none !important;
+        background-attachment: scroll !important;
+        /* 简化背景为单色渐变，减少GPU负担 */
+        background: linear-gradient(135deg, rgba(248, 217, 230, 0.95) 0%, rgba(250, 227, 236, 0.98) 100%) !important;
     }
 
+    /* 隐藏所有伪元素以减少渲染负担 */
     body::before,
-    body::after,
+    body::after {
+        display: none !important;
+    }
+
     body::before::before,
     body::before::after {
+        display: none !important;
+    }
+
+    .container {
+        /* 简化容器背景和阴影 */
+        background: rgba(255, 255, 255, 0.95) !important;
         animation: none !important;
-        opacity: 0.1 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .container::before {
-        animation: none !important;
-        opacity: 0.05 !important;
+        display: none !important;
     }
 
     header h1::before {
-        animation: none !important;
-    }
-
-    .nav-btn::before {
         display: none !important;
     }
 
-    .btn::before {
-        display: none !important;
-    }
-
-    .similarity-badge::before {
-        animation: none !important;
-    }
-
-    .group-header::after {
-        display: none !important;
-    }
-
-    .color-card::before {
-        display: none !important;
-    }
-
-    .color-card-swatch::after {
+    /* 隐藏所有装饰性伪元素 */
+    .nav-btn::before,
+    .btn::before,
+    .similarity-badge::before,
+    .group-header::after,
+    .color-card::before,
+    .color-card-swatch::after,
+    .project-footer::before,
+    .project-footer::after {
         display: none !important;
     }
 
@@ -1783,23 +1785,28 @@ body.dark-mode .close-btn:hover {
         display: none !important;
     }
 
-    .project-footer::before,
-    .project-footer::after {
-        animation: none !important;
-        opacity: 0.05 !important;
-    }
-
-    /* 简化过渡动画 */
-    * {
+    /* 完全禁用过渡动画以提高性能 */
+    *,
+    *::before,
+    *::after {
         transition: none !important;
+        animation: none !important;
     }
 
-    /* 禁用复杂的backdrop-filter在移动端 */
+    /* 保留必要的交互反馈，但使用更简单的方式 */
+    .btn:active,
+    .nav-btn:active {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+
+    /* 禁用复杂的backdrop-filter */
     .container,
     .btn-primary,
     .nav-btn,
     .modal-content,
-    .color-card {
+    .color-card,
+    header {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
     }
@@ -1809,23 +1816,71 @@ body.dark-mode .close-btn:hover {
         animation: none !important;
     }
 
-    /* 简化阴影效果 */
+    /* 大幅简化阴影效果，减少重绘 */
     .btn-primary,
     .nav-btn,
     .color-card,
     .modal-content,
-    .container {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    .container,
+    header {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
     }
 
-    /* 禁用复杂的渐变背景 */
+    /* 使用纯色背景替代渐变 */
     .btn-primary,
-    .nav-btn {
+    .nav-btn.active {
         background: #007aff !important;
     }
 
     .btn-secondary {
+        background: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .nav-btn:not(.active) {
         background: rgba(255, 255, 255, 0.8) !important;
+    }
+
+    /* 禁用hover效果在移动端 */
+    .nav-btn:hover,
+    .btn:hover,
+    .color-card:hover,
+    .matched-color-item:hover,
+    .alternative-color-item:hover,
+    .color-manager-card:hover {
+        transform: none !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* 优化滚动性能 */
+    .image-wrapper,
+    .results-section,
+    .color-manager-grid,
+    .modal-overlay {
+        -webkit-overflow-scrolling: touch;
+        /* 启用硬件加速 */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        /* 使用GPU加速 */
+        will-change: scroll-position;
+    }
+    
+    /* Canvas优化 - 移动端使用较低分辨率以提高性能 */
+    #image-canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+    
+    /* 减少重绘范围 */
+    .color-preview {
+        will-change: transform;
+    }
+    
+    /* 优化列表渲染 */
+    .matched-colors-list,
+    .alternative-colors-list,
+    .color-chart-grid,
+    .color-manager-grid {
+        contain: layout style paint;
     }
 }
 
