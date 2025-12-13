@@ -751,7 +751,7 @@ body.dark-mode .image-preview {
     pointer-events: none;
     box-shadow: none;
     transform: translate(-50%, -50%);
-    display: flex;
+    display: none !important; /* 始终隐藏取色圆圈 */
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -1741,6 +1741,12 @@ body.dark-mode .close-btn:hover {
         /* 简化背景为单色渐变，减少GPU负担 */
         background: linear-gradient(135deg, rgba(248, 217, 230, 0.95) 0%, rgba(250, 227, 236, 0.98) 100%) !important;
     }
+    
+    /* 移动端黑夜模式body样式 */
+    body.dark-mode {
+        background: #000000 !important;
+        color: #f5f5f7 !important;
+    }
 
     /* 隐藏所有伪元素以减少渲染负担 */
     body::before,
@@ -1759,6 +1765,12 @@ body.dark-mode .close-btn:hover {
         animation: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+    }
+    
+    /* 移动端黑夜模式container样式 */
+    body.dark-mode .container {
+        background: rgba(28, 28, 30, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     .container::before {
@@ -1810,6 +1822,16 @@ body.dark-mode .close-btn:hover {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
     }
+    
+    /* 移动端黑夜模式header样式 */
+    body.dark-mode header {
+        background: rgba(28, 28, 30, 0.95) !important;
+        border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    body.dark-mode header h1 {
+        color: #f5f5f7 !important;
+    }
 
     /* 禁用modal动画 */
     .modal-content {
@@ -1825,6 +1847,16 @@ body.dark-mode .close-btn:hover {
     header {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
     }
+    
+    /* 移动端黑夜模式阴影优化 */
+    body.dark-mode .btn-primary,
+    body.dark-mode .nav-btn,
+    body.dark-mode .color-card,
+    body.dark-mode .modal-content,
+    body.dark-mode .container,
+    body.dark-mode header {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+    }
 
     /* 使用纯色背景替代渐变 */
     .btn-primary,
@@ -1838,6 +1870,25 @@ body.dark-mode .close-btn:hover {
 
     .nav-btn:not(.active) {
         background: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    /* 移动端黑夜模式按钮样式 */
+    body.dark-mode .btn-primary,
+    body.dark-mode .nav-btn.active {
+        background: #007aff !important;
+        color: white !important;
+    }
+    
+    body.dark-mode .btn-secondary {
+        background: #4a5568 !important;
+        color: #e0e0e0 !important;
+        border-color: #5a6678 !important;
+    }
+    
+    body.dark-mode .nav-btn:not(.active) {
+        background: rgba(44, 44, 46, 0.8) !important;
+        color: #f5f5f7 !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
     }
 
     /* 禁用hover效果在移动端 */
@@ -1881,6 +1932,74 @@ body.dark-mode .close-btn:hover {
     .color-chart-grid,
     .color-manager-grid {
         contain: layout style paint;
+    }
+    
+    /* 移动端黑夜模式其他元素样式 */
+    body.dark-mode .image-section,
+    body.dark-mode .results-section,
+    body.dark-mode .color-chart-container {
+        background: #3a3a52 !important;
+    }
+    
+    body.dark-mode .image-wrapper {
+        background: #2d2d44 !important;
+        border-color: #4a5568 !important;
+    }
+    
+    body.dark-mode .upload-area {
+        background: #3a3a52 !important;
+        border-color: #4a5568 !important;
+    }
+    
+    body.dark-mode .upload-text {
+        color: #e0e0e0 !important;
+    }
+    
+    body.dark-mode .upload-hint {
+        color: #b0b0b0 !important;
+    }
+    
+    body.dark-mode .color-display,
+    body.dark-mode .matched-color-item,
+    body.dark-mode .color-card {
+        background: #2d2d44 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    body.dark-mode .selected-color-info h3,
+    body.dark-mode .matched-colors h3,
+    body.dark-mode .color-card-id,
+    body.dark-mode .matched-color-id {
+        color: #e0e0e0 !important;
+    }
+    
+    body.dark-mode .color-details,
+    body.dark-mode .matched-color-values {
+        color: #b0b0b0 !important;
+    }
+    
+    body.dark-mode .color-details span,
+    body.dark-mode .matched-color-values span {
+        color: #8b9aff !important;
+    }
+    
+    body.dark-mode .modal-content {
+        background: #242424 !important;
+        color: #e0e0e0 !important;
+    }
+    
+    body.dark-mode .modal-header {
+        background: #242424 !important;
+        border-bottom-color: #3a3a3a !important;
+    }
+    
+    body.dark-mode .modal-body {
+        background: #242424 !important;
+    }
+    
+    body.dark-mode .zoom-level {
+        background: rgba(102, 126, 234, 0.2) !important;
+        color: #e0e0e0 !important;
     }
 }
 

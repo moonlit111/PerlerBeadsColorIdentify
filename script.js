@@ -542,32 +542,11 @@ function pickColorAtPosition(clientX, clientY) {
     const g = imageData.data[1];
     const b = imageData.data[2];
     
-    // 显示颜色预览十字标记（所有设备都显示，点击后停留）
+    // 不显示颜色预览圆圈
     const color = `rgb(${r}, ${g}, ${b})`;
-    const isMobile = window.innerWidth <= 768;
-
-    // 设置透明背景（虽然最终会显示为透明，但保持代码完整性）
-    colorPreview.style.backgroundColor = 'transparent';
-
-    // 计算相对于 image-wrapper 的坐标
-    const wrapperRect = imageWrapper.getBoundingClientRect();
-
-    // 计算点击点相对于 image-wrapper 的坐标
-    // getBoundingClientRect() 已经考虑了滚动，直接相减即可
-    const relativeX = clientX - wrapperRect.left;
-    const relativeY = clientY - wrapperRect.top;
-
-    colorPreview.style.left = relativeX + 'px';
-    colorPreview.style.top = relativeY + 'px';
-    colorPreview.style.display = 'flex';
-
-    // 桌面端短暂显示后隐藏，移动端持续显示
-    if (!isMobile) {
-        setTimeout(() => {
-            colorPreview.style.display = 'none';
-        }, 1);
-    }
-    // 移动端不自动隐藏，保持显示直到下次点击
+    
+    // 确保颜色预览圆圈始终隐藏
+    colorPreview.style.display = 'none';
     
     // 显示选中的颜色信息
     selectedColorBox.style.backgroundColor = color;
