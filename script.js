@@ -442,8 +442,17 @@ function pickColorAtPosition(clientX, clientY) {
     // 显示颜色预览（保留+号）
     const color = `rgb(${r}, ${g}, ${b})`;
     colorPreview.style.backgroundColor = color;
-    colorPreview.style.left = clientX + 'px';
-    colorPreview.style.top = clientY + 'px';
+
+    // 计算相对于 image-wrapper 的坐标（考虑容器滚动）
+    const imageWrapper = document.getElementById('image-wrapper');
+    const wrapperRect = imageWrapper.getBoundingClientRect();
+
+    // 计算点击点相对于 image-wrapper 的坐标
+    const relativeX = clientX - wrapperRect.left;
+    const relativeY = clientY - wrapperRect.top;
+
+    colorPreview.style.left = relativeX + 'px';
+    colorPreview.style.top = relativeY + 'px';
     colorPreview.style.display = 'flex';
     
     // 显示选中的颜色信息
