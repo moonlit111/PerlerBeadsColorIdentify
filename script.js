@@ -392,21 +392,23 @@ imageWrapper.addEventListener('mouseleave', () => {
     }
 });
 
-// 图片点击事件 - 颜色识别（只在非拖动时触发）
-imageCanvas.addEventListener('click', (e) => {
+// 统一的颜色拾取函数
+function pickColorAtPosition(clientX, clientY) {
     if (!currentImage) return;
     
-    // 如果刚刚发生了拖动，不触发颜色识别
-    if (hasMoved) {
-        hasMoved = false;
-        return;
-    }
-    
     const rect = imageCanvas.getBoundingClientRect();
+    
+    // 计算相对于canvas的坐标（考虑滚动和缩放）
+    const canvasX = clientX - rect.left;
+    const canvasY = clientY - rect.top;
+    
+    // 计算实际canvas像素坐标
+    // 需要考虑canvas的实际尺寸和显示尺寸的比例
     const scaleX = imageCanvas.width / rect.width;
     const scaleY = imageCanvas.height / rect.height;
-    const x = Math.floor((e.clientX - rect.left) * scaleX);
-    const y = Math.floor((e.clientY - rect.top) * scaleY);
+    
+    const x = Math.floor(canvasX * scaleX);
+    const y = Math.floor(canvasY * scaleY);
     
     // 确保坐标在画布范围内
     const clampedX = Math.max(0, Math.min(x, imageCanvas.width - 1));
@@ -421,8 +423,8 @@ imageCanvas.addEventListener('click', (e) => {
     // 显示颜色预览（保留+号）
     const color = `rgb(${r}, ${g}, ${b})`;
     colorPreview.style.backgroundColor = color;
-    colorPreview.style.left = e.clientX + 'px';
-    colorPreview.style.top = e.clientY + 'px';
+    colorPreview.style.left = clientX + 'px';
+    colorPreview.style.top = clientY + 'px';
     colorPreview.style.display = 'flex';
     
     // 显示选中的颜色信息
@@ -439,7 +441,75 @@ imageCanvas.addEventListener('click', (e) => {
     renderMatchedColorsList(closestColors, matchedColorsList);
     
     matchedColors.style.display = 'block';
+}
+
+// 图片点击事件 - 颜色识别（只在非拖动时触发）
+imageCanvas.addEventListener('click', (e) => {
+    // 如果刚刚发生了拖动，不触发颜色识别
+    if (hasMoved) {
+        hasMoved = false;
+        return;
+    }
+    
+    pickColorAtPosition(e.clientX, e.clientY);
 });
+
+// 移动端触摸事件 - 颜色识别
+let touchStartTime = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchHasMoved = false;
+
+imageCanvas.addEventListener('touchstart', (e) => {
+    if (!currentImage) return;
+    
+    // 如果是双指触摸，不处理（用于缩放）
+    if (e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    touchStartTime = Date.now();
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchHasMoved = false;
+}, { passive: true });
+
+imageCanvas.addEventListener('touchmove', (e) => {
+    if (!currentImage || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartX);
+    const deltaY = Math.abs(touch.clientY - touchStartY);
+    
+    // 如果移动距离超过5px，认为是拖动
+    if (deltaX > 5 || deltaY > 5) {
+        touchHasMoved = true;
+    }
+}, { passive: true });
+
+imageCanvas.addEventListener('touchend', (e) => {
+    if (!currentImage) return;
+    
+    // 如果是双指触摸结束，不处理
+    if (e.touches.length > 0) return;
+    
+    // 如果发生了拖动，不触发颜色识别
+    if (touchHasMoved) {
+        touchHasMoved = false;
+        return;
+    }
+    
+    // 使用最后记录的触摸位置
+    const touch = e.changedTouches[0];
+    const touchDuration = Date.now() - touchStartTime;
+    
+    // 只有快速点击（小于300ms）才触发颜色识别
+    if (touchDuration < 300) {
+        e.preventDefault();
+        pickColorAtPosition(touch.clientX, touch.clientY);
+    }
+    
+    touchHasMoved = false;
+}, { passive: false });
 
 // 色卡工具
 const colorChartGrid = document.getElementById('color-chart-grid');
@@ -753,15 +823,18 @@ function showColorDetail(color) {
             }
         }, 50);
     } else {
-        // 移动端：重置样式
-        const modalContent = colorDetailModal.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.style.top = '';
-            modalContent.style.position = '';
-            modalContent.style.left = '';
-            modalContent.style.transform = '';
-            modalContent.style.margin = '';
-        }
+        // 移动端：重置样式，确保居中显示
+        setTimeout(() => {
+            const modalContent = colorDetailModal.querySelector('.modal-content');
+            if (modalContent) {
+                // 清除桌面端可能设置的样式
+                modalContent.style.position = '';
+                modalContent.style.top = '';
+                modalContent.style.left = '';
+                modalContent.style.transform = '';
+                modalContent.style.margin = '';
+            }
+        }, 10);
     }
 }
 
