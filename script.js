@@ -141,6 +141,11 @@ const matchedColorsList = document.getElementById('matched-colors-list');
 const imageWrapper = document.querySelector('.image-wrapper');
 const uploadArea = document.getElementById('upload-area');
 
+// 预览框相关元素
+const imagePreview = document.getElementById('image-preview');
+const previewCanvas = document.getElementById('preview-canvas');
+const previewCtx = previewCanvas.getContext('2d');
+
 // 加载图片的通用函数
 function loadImageFromFile(file) {
     if (!file || !file.type.startsWith('image/')) {
@@ -170,9 +175,20 @@ function loadImageFromFile(file) {
             // 隐藏上传区域，显示canvas
             uploadArea.style.display = 'none';
             imageCanvas.style.display = 'block';
+            // 显示预览框并初始化完整图片预览
+            imagePreview.style.display = 'block';
+            imagePreview.classList.add('show');
+            updateDragPreview(); // 初始化完整图片预览
             // 重置颜色选择信息（新图片上传时）
             selectedColorInfo.style.display = 'none';
             matchedColors.style.display = 'none';
+
+            // 上传图片后关闭呼吸缩放效果
+            document.body.classList.add('image-uploaded');
+            const container = document.querySelector('.container');
+            if (container) {
+                container.classList.add('image-uploaded');
+            }
         };
         img.onloaderror = () => {
             alert('图片加载失败，请重试！');
@@ -253,7 +269,12 @@ function drawImage() {
     
     // 绘制图片到canvas（使用原始图片尺寸绘制到缩放后的canvas）
     ctx.drawImage(currentImage, 0, 0, displayWidth, displayHeight);
-    
+
+    // 更新预览框
+    if (imagePreview && imagePreview.style.display !== 'none') {
+        updateDragPreview();
+    }
+
     // 注意：不在这里重置颜色选择信息，保持匹配结果可见
     // 只有在重新上传图片时才需要重置
 }
@@ -365,6 +386,14 @@ imageWrapper.addEventListener('mousemove', (e) => {
         hasMoved = true;
         imageWrapper.scrollLeft = scrollStartX + deltaX;
         imageWrapper.scrollTop = scrollStartY + deltaY;
+
+        // 显示预览框并更新内容
+        if (imagePreview) {
+            imagePreview.style.display = 'block';
+            imagePreview.classList.add('show');
+            updateDragPreview();
+        }
+
         e.preventDefault();
         e.stopPropagation();
     }
@@ -375,6 +404,22 @@ imageWrapper.addEventListener('mouseup', (e) => {
     if (isDragging) {
         isDragging = false;
         imageWrapper.style.cursor = 'crosshair';
+
+        // 如果没有发生拖动，则认为是点击，进行颜色识别
+        if (!hasMoved && currentImage && e.target === imageCanvas) {
+            pickColorAtPosition(e.clientX, e.clientY);
+        }
+
+        // 如果发生了拖动，隐藏预览框
+        if (hasMoved && imagePreview) {
+            imagePreview.classList.remove('show');
+            setTimeout(() => {
+                if (imagePreview && !imagePreview.classList.contains('show')) {
+                    imagePreview.style.display = 'none';
+                }
+            }, 300); // 等待过渡动画完成
+        }
+
         // 如果发生了拖动，阻止点击事件
         if (hasMoved) {
             e.preventDefault();
@@ -400,34 +445,17 @@ function pickColorAtPosition(clientX, clientY) {
     const rect = imageCanvas.getBoundingClientRect();
 
     // 计算相对于canvas的坐标
-    // getBoundingClientRect() 已经考虑了页面滚动，但还需要考虑容器的滚动偏移
-    const wrapperScrollLeft = imageWrapper.scrollLeft;
-    const wrapperScrollTop = imageWrapper.scrollTop;
+    // getBoundingClientRect() 已经考虑了页面滚动，直接相减得到相对于canvas的坐标
+    const canvasX = clientX - rect.left;
+    const canvasY = clientY - rect.top;
 
-    // 计算点击点相对于canvas左上角的坐标
-    // 减去容器的滚动偏移，确保坐标正确
-    const canvasX = clientX - rect.left + wrapperScrollLeft;
-    const canvasY = clientY - rect.top + wrapperScrollTop;
-
-    // 获取canvas的实际像素尺寸（已经在drawImage中设置）
+    // 获取canvas的像素尺寸
     const pixelWidth = imageCanvas.width;
     const pixelHeight = imageCanvas.height;
 
-    // 获取canvas的实际显示尺寸
-    // 由于 imageCanvas.style.width/height 被设置为 pixelWidth/Height
-    // 理论上 rect.width/height 应该等于 pixelWidth/Height
-    // 但可能存在浏览器舍入误差，所以计算比例以确保准确性
-    const displayWidth = rect.width || pixelWidth;
-    const displayHeight = rect.height || pixelHeight;
-
-    // 计算缩放比例（处理舍入误差）
-    const scaleX = pixelWidth / displayWidth;
-    const scaleY = pixelHeight / displayHeight;
-
-    // 计算实际canvas像素坐标
-    // 使用精确的计算，避免累积误差
-    const x = Math.round(canvasX * scaleX);
-    const y = Math.round(canvasY * scaleY);
+    // 由于canvas的像素尺寸和显示尺寸相同，直接使用坐标
+    const x = Math.round(canvasX);
+    const y = Math.round(canvasY);
 
     // 确保坐标在画布范围内
     const clampedX = Math.max(0, Math.min(x, pixelWidth - 1));
@@ -447,11 +475,12 @@ function pickColorAtPosition(clientX, clientY) {
         // 设置透明背景（虽然最终会显示为透明，但保持代码完整性）
         colorPreview.style.backgroundColor = 'transparent';
 
-        // 计算相对于 image-wrapper 的坐标（考虑容器滚动）
+        // 计算相对于 image-wrapper 的坐标
         const imageWrapper = document.getElementById('image-wrapper');
         const wrapperRect = imageWrapper.getBoundingClientRect();
 
         // 计算点击点相对于 image-wrapper 的坐标
+        // getBoundingClientRect() 已经考虑了滚动，直接相减即可
         const relativeX = clientX - wrapperRect.left;
         const relativeY = clientY - wrapperRect.top;
 
@@ -484,22 +513,14 @@ function pickColorAtPosition(clientX, clientY) {
     matchedColors.style.display = 'block';
 }
 
-// 图片点击事件 - 颜色识别（只在非拖动时触发）
-imageCanvas.addEventListener('click', (e) => {
-    // 如果刚刚发生了拖动，不触发颜色识别
-    if (hasMoved) {
-        hasMoved = false;
-        return;
-    }
-    
-    pickColorAtPosition(e.clientX, e.clientY);
-});
+// 图片点击事件已在 mouseup 中处理，这里移除以避免冲突
 
-// 移动端触摸事件 - 颜色识别
-let touchStartTime = 0;
-let touchStartX = 0;
-let touchStartY = 0;
-let touchHasMoved = false;
+
+    // 移动端触摸事件 - 颜色识别
+    let touchStartTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchHasMoved = false;
 
 imageCanvas.addEventListener('touchstart', (e) => {
     if (!currentImage) return;
@@ -1399,6 +1420,44 @@ colorSystemSelect.addEventListener('change', (e) => {
             };
             reader.readAsText(file);
         });
+    }
+
+    // 更新拖动预览框 - 显示完整图片和可见区域框
+    function updateDragPreview() {
+        if (!currentImage || !imagePreview || imagePreview.style.display === 'none') return;
+
+        const wrapper = imageWrapper;
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        // 预览框的最大尺寸
+        const previewMaxSize = 150;
+
+        // 计算完整图片的缩放比例，使其适应预览框
+        const imageScale = Math.min(previewMaxSize / imageCanvas.width, previewMaxSize / imageCanvas.height);
+        const previewWidth = imageCanvas.width * imageScale;
+        const previewHeight = imageCanvas.height * imageScale;
+
+        // 设置预览canvas大小
+        previewCanvas.width = previewWidth;
+        previewCanvas.height = previewHeight;
+
+        // 绘制完整图片到预览框
+        previewCtx.drawImage(imageCanvas, 0, 0, imageCanvas.width, imageCanvas.height, 0, 0, previewWidth, previewHeight);
+
+        // 计算可见区域在预览框中的位置和大小
+        const visibleRectX = (wrapper.scrollLeft / imageCanvas.width) * previewWidth;
+        const visibleRectY = (wrapper.scrollTop / imageCanvas.height) * previewHeight;
+        const visibleRectWidth = Math.min(wrapperRect.width / imageCanvas.width * previewWidth, previewWidth - visibleRectX);
+        const visibleRectHeight = Math.min(wrapperRect.height / imageCanvas.height * previewHeight, previewHeight - visibleRectY);
+
+        // 绘制可见区域的矩形框
+        previewCtx.strokeStyle = 'rgba(0, 122, 255, 0.8)';
+        previewCtx.lineWidth = 2;
+        previewCtx.strokeRect(visibleRectX, visibleRectY, visibleRectWidth, visibleRectHeight);
+
+        // 填充半透明背景表示可见区域
+        previewCtx.fillStyle = 'rgba(0, 122, 255, 0.1)';
+        previewCtx.fillRect(visibleRectX, visibleRectY, visibleRectWidth, visibleRectHeight);
     }
 
     console.log('初始化完成！');
