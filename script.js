@@ -841,7 +841,7 @@ function showColorDetail(color) {
     detailHex.textContent = color.hex;
     detailRgb.textContent = `(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})`;
     
-    // 查找10个替代颜色（排除自己，只考虑用户已选择的颜色）
+    // 查找替代颜色（排除自己，只考虑用户已选择的颜色）
     const allColors = getAllColors();
     let filteredColors = filterSelectedColors(allColors, color.id);
     
