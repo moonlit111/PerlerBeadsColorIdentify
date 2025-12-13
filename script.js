@@ -290,6 +290,44 @@ imageWrapper.addEventListener('wheel', (e) => {
     updateZoom();
 }, { passive: false });
 
+// 双指捏合缩放
+let initialDistance = 0;
+let initialZoom = 1;
+
+imageWrapper.addEventListener('touchstart', (e) => {
+    if (!currentImage || e.touches.length !== 2) return;
+    
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    initialDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+    );
+    initialZoom = currentZoom;
+}, { passive: true });
+
+imageWrapper.addEventListener('touchmove', (e) => {
+    if (!currentImage || e.touches.length !== 2) return;
+    
+    e.preventDefault();
+    const touch1 = e.touches[0];
+    const touch2 = e.touches[1];
+    const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+    );
+    
+    if (initialDistance > 0) {
+        const scale = currentDistance / initialDistance;
+        currentZoom = Math.max(0.2, Math.min(10, initialZoom * scale));
+        updateZoom();
+    }
+}, { passive: false });
+
+imageWrapper.addEventListener('touchend', () => {
+    initialDistance = 0;
+}, { passive: true });
+
 // 拖动查看功能
 let isDragging = false;
 let dragStartX = 0;
@@ -380,16 +418,12 @@ imageCanvas.addEventListener('click', (e) => {
     const g = imageData.data[1];
     const b = imageData.data[2];
     
-    // 显示颜色预览
+    // 显示颜色预览（保留+号）
     const color = `rgb(${r}, ${g}, ${b})`;
     colorPreview.style.backgroundColor = color;
     colorPreview.style.left = e.clientX + 'px';
     colorPreview.style.top = e.clientY + 'px';
-    colorPreview.style.display = 'block';
-    
-    setTimeout(() => {
-        colorPreview.style.display = 'none';
-    }, 500);
+    colorPreview.style.display = 'flex';
     
     // 显示选中的颜色信息
     selectedColorBox.style.backgroundColor = color;
@@ -408,19 +442,8 @@ imageCanvas.addEventListener('click', (e) => {
 });
 
 // 色卡工具
-const filterButtons = document.querySelectorAll('.filter-btn');
 const colorChartGrid = document.getElementById('color-chart-grid');
 let currentFilter = 'all';
-
-// 过滤按钮事件
-filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.group;
-        renderColorChart();
-    });
-});
 
 // 渲染色卡
 function renderColorChart() {
@@ -468,29 +491,27 @@ function renderColorChart() {
         });
         
         sortedGroups.forEach(group => {
-            if (currentFilter === 'all') {
-                const groupHeader = document.createElement('div');
-                groupHeader.className = 'group-header collapsed';
-                groupHeader.dataset.group = group;
-                const groupName = group.startsWith('数字') ? group : `${group} 组`;
-                const toggle = document.createElement('span');
-                toggle.className = 'group-toggle';
-                toggle.textContent = '▶';
-                groupHeader.innerHTML = `<span>${groupName} (${groups[group].length} 色)</span>`;
-                groupHeader.appendChild(toggle);
-                
-                // 折叠功能 - 整个标题栏可点击
-                groupHeader.addEventListener('click', () => {
-                    const content = groupHeader.nextElementSibling;
-                    if (content && content.classList.contains('group-content')) {
-                        groupHeader.classList.toggle('collapsed');
-                        content.classList.toggle('collapsed');
-                        toggle.textContent = groupHeader.classList.contains('collapsed') ? '▶' : '▼';
-                    }
-                });
-                
-                colorChartGrid.appendChild(groupHeader);
-            }
+            const groupHeader = document.createElement('div');
+            groupHeader.className = 'group-header collapsed';
+            groupHeader.dataset.group = group;
+            const groupName = group.startsWith('数字') ? group : `${group} 组`;
+            const toggle = document.createElement('span');
+            toggle.className = 'group-toggle';
+            toggle.textContent = '▶';
+            groupHeader.innerHTML = `<span>${groupName} (${groups[group].length} 色)</span>`;
+            groupHeader.appendChild(toggle);
+            
+            // 折叠功能 - 整个标题栏可点击
+            groupHeader.addEventListener('click', () => {
+                const content = groupHeader.nextElementSibling;
+                if (content && content.classList.contains('group-content')) {
+                    groupHeader.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                    toggle.textContent = groupHeader.classList.contains('collapsed') ? '▶' : '▼';
+                }
+            });
+            
+            colorChartGrid.appendChild(groupHeader);
             
             const groupContent = document.createElement('div');
             groupContent.className = 'group-content collapsed';
@@ -543,31 +564,29 @@ function renderColorChart() {
         });
     } else {
         // MARD系统，按原方式显示
-        const groups = currentFilter === 'all' ? Object.keys(mard221Colors) : [currentFilter];
+        const groups = Object.keys(mard221Colors);
         
         groups.forEach(group => {
-            if (currentFilter === 'all') {
-                const groupHeader = document.createElement('div');
-                groupHeader.className = 'group-header collapsed';
-                groupHeader.dataset.group = group;
-                const toggle = document.createElement('span');
-                toggle.className = 'group-toggle';
-                toggle.textContent = '▶';
-                groupHeader.innerHTML = `<span>${group} 组 (${mard221Colors[group].length} 色)</span>`;
-                groupHeader.appendChild(toggle);
-                
-                // 折叠功能 - 整个标题栏可点击
-                groupHeader.addEventListener('click', () => {
-                    const content = groupHeader.nextElementSibling;
-                    if (content && content.classList.contains('group-content')) {
-                        groupHeader.classList.toggle('collapsed');
-                        content.classList.toggle('collapsed');
-                        toggle.textContent = groupHeader.classList.contains('collapsed') ? '▶' : '▼';
-                    }
-                });
-                
-                colorChartGrid.appendChild(groupHeader);
-            }
+            const groupHeader = document.createElement('div');
+            groupHeader.className = 'group-header collapsed';
+            groupHeader.dataset.group = group;
+            const toggle = document.createElement('span');
+            toggle.className = 'group-toggle';
+            toggle.textContent = '▶';
+            groupHeader.innerHTML = `<span>${group} 组 (${mard221Colors[group].length} 色)</span>`;
+            groupHeader.appendChild(toggle);
+            
+            // 折叠功能 - 整个标题栏可点击
+            groupHeader.addEventListener('click', () => {
+                const content = groupHeader.nextElementSibling;
+                if (content && content.classList.contains('group-content')) {
+                    groupHeader.classList.toggle('collapsed');
+                    content.classList.toggle('collapsed');
+                    toggle.textContent = groupHeader.classList.contains('collapsed') ? '▶' : '▼';
+                }
+            });
+            
+            colorChartGrid.appendChild(groupHeader);
             
             const groupContent = document.createElement('div');
             groupContent.className = 'group-content collapsed';
@@ -689,6 +708,61 @@ function showColorDetail(color) {
     
     // 显示模态框
     colorDetailModal.style.display = 'flex';
+    
+    // 桌面端：将模态框定位到页面中央（考虑滚动位置）
+    if (window.innerWidth >= 769) {
+        setTimeout(() => {
+            const modalContent = colorDetailModal.querySelector('.modal-content');
+            if (modalContent) {
+                const pageHeight = Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight
+                );
+                const viewportHeight = window.innerHeight;
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const modalHeight = modalContent.offsetHeight;
+                
+                // 计算页面中心位置
+                const pageCenter = pageHeight / 2;
+                const targetTop = pageCenter - (modalHeight / 2);
+                
+                // 确保模态框在可见区域内
+                const minTop = scrollTop + 40;
+                const maxTop = scrollTop + viewportHeight - modalHeight - 40;
+                let finalTop = Math.max(minTop, Math.min(maxTop, targetTop));
+                
+                // 如果页面中心在可见区域内，使用页面中心；否则使用视口中心
+                if (targetTop >= minTop && targetTop <= maxTop) {
+                    finalTop = targetTop;
+                } else {
+                    finalTop = scrollTop + (viewportHeight / 2) - (modalHeight / 2);
+                }
+                
+                modalContent.style.top = finalTop + 'px';
+                modalContent.style.position = 'absolute';
+                modalContent.style.left = '50%';
+                modalContent.style.transform = 'translateX(-50%)';
+                modalContent.style.margin = '0';
+                
+                // 滚动到模态框位置
+                const scrollTo = finalTop - (viewportHeight / 2) + (modalHeight / 2);
+                window.scrollTo({
+                    top: Math.max(0, scrollTo),
+                    behavior: 'smooth'
+                });
+            }
+        }, 50);
+    } else {
+        // 移动端：重置样式
+        const modalContent = colorDetailModal.querySelector('.modal-content');
+        if (modalContent) {
+            modalContent.style.top = '';
+            modalContent.style.position = '';
+            modalContent.style.left = '';
+            modalContent.style.transform = '';
+            modalContent.style.margin = '';
+        }
+    }
 }
 
 // 关闭模态框
@@ -807,7 +881,21 @@ colorSystemSelect.addEventListener('change', (e) => {
     }
 
     // 渲染颜色管理界面
-    function renderColorManager() {
+    function renderColorManager(preserveState = true) {
+    // 保存当前展开的分组状态
+    const expandedGroups = new Set();
+    if (preserveState) {
+        const groupHeaders = colorManagerGrid.querySelectorAll('.color-manager-group-header');
+        groupHeaders.forEach(header => {
+            if (!header.classList.contains('collapsed')) {
+                const group = header.dataset.group;
+                if (group) {
+                    expandedGroups.add(group);
+                }
+            }
+        });
+    }
+    
     const allColors = getAllColors();
     const selectedIds = getSelectedColorIds();
     
@@ -844,6 +932,12 @@ colorSystemSelect.addEventListener('change', (e) => {
     });
     
     totalCountSpan.textContent = filteredColors.length;
+    
+    // 暂时禁用过渡动画以避免抖动
+    if (preserveState) {
+        colorManagerGrid.style.transition = 'none';
+    }
+    
     colorManagerGrid.innerHTML = '';
     
     // 排序分组：字母组按字母顺序，数字组放在最后并按范围排序
@@ -865,15 +959,22 @@ colorSystemSelect.addEventListener('change', (e) => {
     
     sortedGroups.forEach(group => {
         const groupHeader = document.createElement('div');
-        groupHeader.className = 'color-manager-group-header collapsed';
+        // 如果这个分组之前是展开的，保持展开状态
+        const isExpanded = expandedGroups.has(group);
+        groupHeader.className = isExpanded ? 'color-manager-group-header' : 'color-manager-group-header collapsed';
         groupHeader.dataset.group = group;
+        
+        // 如果正在保持状态，暂时禁用过渡动画
+        if (preserveState) {
+            groupHeader.style.transition = 'none';
+        }
         
         const leftSection = document.createElement('div');
         leftSection.className = 'group-header-left';
         
         const toggle = document.createElement('span');
         toggle.className = 'color-manager-group-toggle';
-        toggle.textContent = '▶';
+        toggle.textContent = isExpanded ? '▼' : '▶';
         
         const groupTitle = document.createElement('span');
         const groupName = group.startsWith('数字') ? group : `${group} 组`;
@@ -932,7 +1033,13 @@ colorSystemSelect.addEventListener('change', (e) => {
         colorManagerGrid.appendChild(groupHeader);
         
         const groupContent = document.createElement('div');
-        groupContent.className = 'color-manager-group-content collapsed';
+        // 如果这个分组之前是展开的，保持展开状态
+        groupContent.className = isExpanded ? 'color-manager-group-content' : 'color-manager-group-content collapsed';
+        
+        // 如果正在保持状态，暂时禁用过渡动画
+        if (preserveState) {
+            groupContent.style.transition = 'none';
+        }
         
         groups[group].forEach(colorInfo => {
             const card = document.createElement('div');
@@ -978,6 +1085,23 @@ colorSystemSelect.addEventListener('change', (e) => {
     });
     
     updateSelectedCount();
+    
+    // 恢复过渡动画
+    if (preserveState) {
+        // 使用 requestAnimationFrame 确保在下一帧恢复过渡
+        requestAnimationFrame(() => {
+            colorManagerGrid.style.transition = '';
+            // 恢复所有分组标题和内容的过渡
+            const allHeaders = colorManagerGrid.querySelectorAll('.color-manager-group-header');
+            const allContents = colorManagerGrid.querySelectorAll('.color-manager-group-content');
+            allHeaders.forEach(header => {
+                header.style.transition = '';
+            });
+            allContents.forEach(content => {
+                content.style.transition = '';
+            });
+        });
+    }
 }
 
     // 更新已选择数量

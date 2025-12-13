@@ -44,7 +44,7 @@
                         <input type="file" id="image-upload" accept="image/*" style="display: none;">
                         <button id="zoom-in-btn" class="btn btn-secondary">🔍+ 放大</button>
                         <button id="zoom-out-btn" class="btn btn-secondary">🔍- 缩小</button>
-                        <span class="zoom-level">缩放: <span id="zoom-value">100%</span> (滚轮缩放)</span>
+                        <span class="zoom-level">缩放: <span id="zoom-value">100%</span> (滚轮或双指捏合缩放)</span>
                     </div>
                     <div class="image-wrapper" id="image-wrapper">
                         <div id="upload-area" class="upload-area">
@@ -55,7 +55,9 @@
                             </div>
                         </div>
                         <canvas id="image-canvas" style="display: none;"></canvas>
-                        <div id="color-preview" class="color-preview" style="display: none;"></div>
+                        <div id="color-preview" class="color-preview" style="display: none;">
+                            <span class="color-preview-plus">+</span>
+                        </div>
                     </div>
                 </div>
                 
@@ -82,24 +84,11 @@
         <!-- 色卡工具 -->
         <div id="color-chart-tool" class="tool-section">
             <div class="tool-header">
-                <h2>Mard221 色卡</h2>
+                <h2>色卡</h2>
                 <p>点击任意颜色查看详细信息及10个替代颜色</p>
             </div>
             
             <div class="color-chart-container">
-                <div class="group-filter">
-                    <button class="filter-btn active" data-group="all">全部</button>
-                    <button class="filter-btn" data-group="A">A组</button>
-                    <button class="filter-btn" data-group="B">B组</button>
-                    <button class="filter-btn" data-group="C">C组</button>
-                    <button class="filter-btn" data-group="D">D组</button>
-                    <button class="filter-btn" data-group="E">E组</button>
-                    <button class="filter-btn" data-group="F">F组</button>
-                    <button class="filter-btn" data-group="G">G组</button>
-                    <button class="filter-btn" data-group="H">H组</button>
-                    <button class="filter-btn" data-group="M">M组</button>
-                </div>
-                
                 <div id="color-chart-grid" class="color-chart-grid"></div>
                 
                 <!-- 颜色详情模态框 -->
