@@ -376,9 +376,17 @@ const handleWheelZoom = throttle((e) => {
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
     currentZoom = Math.max(0.2, Math.min(10, currentZoom * delta));
     updateZoom();
+}, 50); // 50ms节流
+
+// 同步阻止默认滚轮行为
+imageWrapper.addEventListener('wheel', (e) => {
+    if (currentImage) {
+        e.preventDefault();
+        handleWheelZoom(e);
+    }
 }, { passive: false });
 
-// 双指捏合缩放
+// 双指捏合缩放 - 使用rafThrottle优化
 let initialDistance = 0;
 let initialZoom = 1;
 
@@ -482,11 +490,6 @@ imageWrapper.addEventListener('mousemove', (e) => {
         e.stopPropagation();
     }
 
-    handleDragMove(e);
-});
-
-imageWrapper.addEventListener('mousemove', (e) => {
-    if (!isDragging || !currentImage) return;
     handleDragMove(e);
 });
 
