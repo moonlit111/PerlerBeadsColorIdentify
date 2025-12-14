@@ -613,6 +613,9 @@ body.dark-mode .image-preview {
     padding: 15px;
     max-height: 80vh;
     overflow-y: auto;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 使用教程样式 */
@@ -633,6 +636,9 @@ body.dark-mode .image-preview {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(0, 0, 0, 0.05);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .tutorial-step {
@@ -706,6 +712,9 @@ body.dark-mode .tutorial-step .step-text {
     padding: 12px;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .color-box {
@@ -720,6 +729,10 @@ body.dark-mode .tutorial-step .step-text {
 .color-details {
     font-size: 12px;
     color: var(--text-primary);
+    min-width: 0;
+    flex: 1;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 .color-details div {
@@ -755,6 +768,9 @@ body.dark-mode .tutorial-step .step-text {
     gap: 8px;
     transition: var(--transition-normal);
     border: 1px solid transparent;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .matched-color-item:hover {
@@ -794,6 +810,9 @@ body.dark-mode .matched-color-item.best-match {
 
 .matched-color-info {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .matched-color-id {
@@ -801,12 +820,16 @@ body.dark-mode .matched-color-item.best-match {
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 2px;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .matched-color-values {
     font-size: 12px;
     color: #666;
     margin-bottom: 2px;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .matched-color-values span {
@@ -2559,6 +2582,29 @@ body.dark-mode .theme-toggle {
     height: 20px;
     cursor: pointer;
     accent-color: #667eea;
+    border-radius: 4px;
+    border: 2px solid #d0d0d0;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.color-manager-card input[type="checkbox"]:checked {
+    border-color: #667eea;
+    background-color: #667eea;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 6l3 3 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 12px 12px;
+}
+
+.color-manager-card input[type="checkbox"]:hover {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
 .color-manager-label {
@@ -2610,6 +2656,25 @@ body.dark-mode .color-manager-card {
 body.dark-mode .color-manager-card:hover {
     border-color: #667eea;
     background: #3a3a52;
+}
+
+body.dark-mode .color-manager-card input[type="checkbox"] {
+    border-color: #5a6678;
+    background-color: #2d2d44;
+}
+
+body.dark-mode .color-manager-card input[type="checkbox"]:checked {
+    border-color: #667eea;
+    background-color: #667eea;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2 6l3 3 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 12px 12px;
+}
+
+body.dark-mode .color-manager-card input[type="checkbox"]:hover {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
 }
 
 body.dark-mode .color-manager-id {

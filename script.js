@@ -378,13 +378,18 @@ const handleWheelZoom = throttle((e) => {
     updateZoom();
 }, 50); // 50ms节流
 
-// 同步阻止默认滚轮行为
-imageWrapper.addEventListener('wheel', (e) => {
+// 滚轮事件处理函数
+function handleWheelEvent(e) {
     if (currentImage) {
         e.preventDefault();
+        e.stopPropagation();
         handleWheelZoom(e);
     }
-}, { passive: false });
+}
+
+// 在imageWrapper和canvas上都绑定滚轮事件，确保滚轮缩放正常工作
+imageWrapper.addEventListener('wheel', handleWheelEvent, { passive: false });
+imageCanvas.addEventListener('wheel', handleWheelEvent, { passive: false });
 
 // 双指捏合缩放 - 使用rafThrottle优化
 let initialDistance = 0;
